@@ -2,7 +2,7 @@ import { useCallback, useEffect, useRef, useState } from 'react'
 import './App.css'
 import EnvelopeIntro from './components/EnvelopeIntro'
 import cardBackground from './assets/innerCard.png'
-import backgroundSong from './assets/backgroundSong.mp3'
+import backgroundSong from './assets/background-song.mp3'
 
 const App = () => {
   const [showIntro, setShowIntro] = useState(true)
