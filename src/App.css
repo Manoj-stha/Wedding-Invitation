@@ -1,0 +1,454 @@
+/* ── Opening envelope video ───────────────────────────────────────────
+   A full-screen, control-free video stage. The video keeps its native
+   first frame (with a matching poster) until the guest taps anywhere. */
+
+.envelope-intro {
+  position: fixed;
+  inset: 0;
+  z-index: 50;
+  display: grid;
+  place-items: center;
+  overflow: hidden;
+  background: #050303;
+  cursor: pointer;
+  opacity: 1;
+  transition:
+    opacity 900ms ease,
+    visibility 900ms ease;
+  user-select: none;
+  -webkit-user-select: none;
+  -webkit-tap-highlight-color: transparent;
+  -webkit-touch-callout: none;
+}
+
+.envelope-intro.is-leaving {
+  opacity: 0;
+  visibility: hidden;
+  pointer-events: none;
+}
+
+.envelope-intro:focus-visible {
+  outline: 2px solid rgba(242, 217, 166, 0.6);
+  outline-offset: -2px;
+}
+
+/* Phones (and other narrow portrait screens): show only the centred
+   rectangular door, with the dark surround filling the rest. */
+.envelope-intro__video {
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  pointer-events: none;
+  outline: none;
+  background: transparent;
+}
+
+/* Larger screens: let the video fill the entire viewport edge to edge. */
+@media (min-width: 768px) {
+  .envelope-intro__video {
+    object-fit: cover;
+  }
+}
+
+/* Make sure no browser paints its native video UI, even for a frame. */
+.envelope-intro__video::-webkit-media-controls,
+.envelope-intro__video::-webkit-media-controls-enclosure,
+.envelope-intro__video::-webkit-media-controls-panel,
+.envelope-intro__video::-webkit-media-controls-start-playback-button,
+.envelope-intro__video::-webkit-media-controls-overlay-play-button {
+  display: none !important;
+  -webkit-appearance: none;
+  opacity: 0 !important;
+}
+
+.envelope-intro__hint {
+  position: absolute;
+  bottom: clamp(3rem, 11vh, 10rem);
+  left: 50%;
+  z-index: 3;
+  margin: 0;
+  transform: translateX(-50%);
+  font-family: var(--font-hindi);
+  font-size: clamp(1.15rem, 3.2vw, 1.7rem);
+  font-weight: 600;
+  letter-spacing: 0;
+  color: #f2d9a6;
+  text-shadow: 0 2px 18px rgba(0, 0, 0, 0.7);
+  white-space: nowrap;
+  pointer-events: none;
+  animation: envelope-hint-pulse 2.6s ease-in-out infinite;
+}
+
+@keyframes envelope-hint-pulse {
+  0%,
+  100% {
+    opacity: 0.55;
+  }
+  50% {
+    opacity: 1;
+  }
+}
+
+/* ── Invitation beneath the intro ───────────────────────────────────── */
+
+/* Background music: no player, no controls, nothing visible on the page. */
+.background-song {
+  display: none;
+}
+
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  white-space: nowrap;
+  border: 0;
+}
+
+/* Stage: a maroon page with the card artwork centred on it. */
+.site {
+  display: grid;
+  place-items: center;
+  width: 100%;
+  min-height: 100vh;
+  min-height: 100svh;
+  min-height: 100dvh;
+  background-color: #2a0104;
+  background-image: linear-gradient(
+    to bottom,
+    #5b060f 0%,
+    #370102 55%,
+    #250100 100%
+  );
+}
+
+/* The card matches the exact 1024:1536 proportion of innerCard.png, filling
+   the screen height on large displays and the width on phones. Keeping the
+   artwork's own ratio prevents the border and ornaments from stretching. */
+.card {
+  position: relative;
+  width: min(100%, calc(100vh * 1024 / 1536));
+  width: min(100%, calc(100svh * 1024 / 1536));
+  width: min(100%, calc(100dvh * 1024 / 1536));
+  aspect-ratio: 1024 / 1536;
+  background-image: var(--card-background);
+  background-repeat: no-repeat;
+  background-position: center;
+  background-size: 100% 100%;
+  container-type: inline-size;
+}
+
+/* Text lives inside the blank cream panel of innerCard.png. That panel is
+   taller and slightly wider than the previous artwork's, so the copy is now
+   placed from 16% to 89% of the card and 11% in from either side. */
+.card__content {
+  position: absolute;
+  top: 16%;
+  right: 11%;
+  bottom: 11%;
+  left: 11%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  color: #570910;
+}
+
+/* The mantra stays put; everything below it can scroll if the card is full. */
+.card__mantra {
+  flex: none;
+  margin: 0 0 1.8cqw;
+  font-family: var(--font-hindi);
+  font-size: 3.2cqw;
+  line-height: 1.4;
+  color: #8a5a1e;
+  margin-top: 1.8cqw;
+}
+
+.card__scroll-shell {
+  position: relative;
+  flex: 1;
+  width: 100%;
+  min-height: 0;
+}
+
+.card__scroll {
+  width: 100%;
+  height: 100%;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+  outline: none;
+}
+
+.card__scroll::-webkit-scrollbar {
+  display: none;
+}
+
+.card__scroll:focus-visible {
+  outline: 1px dashed rgba(169, 120, 44, 0.55);
+  outline-offset: 3px;
+}
+
+/* Soft fade hints that the invitation continues below. It stays short so it
+   never washes over the last fully visible line. */
+.card__scroll-shell.has-more::after {
+  content: "";
+  position: absolute;
+  right: 0;
+  bottom: 0;
+  left: 0;
+  height: 4cqw;
+  background: linear-gradient(
+    to bottom,
+    rgba(252, 222, 171, 0) 0%,
+    rgba(252, 222, 171, 0.75) 60%,
+    #fcdeab 100%
+  );
+  pointer-events: none;
+}
+
+.card__scroll-inner {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1.6cqw;
+  min-height: 100%;
+  padding-bottom: 0;
+}
+
+/* Small gold eyebrow that names the occasion above the couple. */
+.card__eyebrow {
+  margin: 0;
+  font-family: var(--font-hindi);
+  font-size: 2.9cqw;
+  font-weight: 600;
+  line-height: 1.5;
+  color: #a9782c;
+}
+
+.card__couple {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.8cqw;
+  width: 100%;
+}
+
+.card__name {
+  margin: 0;
+  font-family: var(--font-hindi);
+  font-size: 9cqw;
+  font-weight: 400;
+  line-height: 1.2;
+  color: #570910;
+}
+
+.card__amp {
+  display: flex;
+  align-items: center;
+  gap: 2.6cqw;
+  width: 50%;
+  margin: 0.2cqw 0;
+  font-family: var(--font-hindi);
+  font-size: 4.2cqw;
+  line-height: 1.2;
+  color: #8a5a1e;
+}
+
+.card__amp::before,
+.card__amp::after {
+  content: "";
+  flex: 1;
+  height: 1px;
+  background: linear-gradient(to right, transparent, #b98a3e, transparent);
+}
+
+.card__blessing,
+.card__closing {
+  width: 100%;
+  margin: 0;
+  font-family: var(--font-hindi);
+  font-size: 3.3cqw;
+  font-weight: 400;
+  line-height: 1.45;
+  text-wrap: pretty;
+  color: #68201b;
+}
+
+.card__blessing {
+  max-width: 94%;
+}
+
+.card__closing {
+  max-width: 92%;
+}
+
+/* Hairline divider with a small diamond at the centre. */
+.card__ornament {
+  position: relative;
+  flex: none;
+  width: 56%;
+  height: 5px;
+}
+
+.card__ornament::before {
+  content: "";
+  position: absolute;
+  top: 50%;
+  right: 0;
+  left: 0;
+  height: 1px;
+  transform: translateY(-50%);
+  background: linear-gradient(
+    to right,
+    transparent,
+    rgba(169, 120, 44, 0.55) 18%,
+    rgba(169, 120, 44, 0.55) 82%,
+    transparent
+  );
+}
+
+.card__ornament::after {
+  content: "";
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 0.85cqw;
+  height: 0.85cqw;
+  transform: translate(-50%, -50%) rotate(45deg);
+  background: #b98a3e;
+}
+
+.card__details {
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+  margin: 0;
+}
+
+.card__row {
+  position: relative;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  width: 100%;
+  padding: 1.45cqw 0;
+}
+
+.card__row::after {
+  content: "";
+  position: absolute;
+  top: 12%;
+  bottom: 12%;
+  left: 50%;
+  width: 1px;
+  background: rgba(169, 120, 44, 0.35);
+}
+
+.card__detail {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.3cqw;
+  width: 100%;
+  padding: 1.1cqw 0;
+}
+
+.card__row .card__detail {
+  padding: 0;
+}
+
+.card__details > :first-child {
+  padding-top: 0;
+}
+
+.card__details > :last-child {
+  padding-bottom: 0;
+}
+
+/* Hairline rules between the venue rows. */
+.card__details > * + * {
+  position: relative;
+}
+
+.card__details > * + *::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 50%;
+  width: 84%;
+  height: 1px;
+  transform: translateX(-50%);
+  background: rgba(169, 120, 44, 0.35);
+}
+
+.card__detail dt {
+  font-family: var(--font-hindi);
+  font-size: 2.5cqw;
+  font-weight: 600;
+  line-height: 1.35;
+  color: #8a5a1e;
+}
+
+.card__detail dd {
+  margin: 0;
+  font-family: var(--font-hindi);
+  font-size: 3.3cqw;
+  font-weight: 500;
+  line-height: 1.25;
+  text-wrap: balance;
+  color: #570910;
+}
+
+/* The English date sits quietly under the Nepali date row. */
+.card__detail--ad {
+  padding: 0.15cqw 0 0;
+}
+
+.card__detail--ad::before {
+  content: none;
+}
+
+.card__detail--ad dd {
+  font-size: 2.7cqw;
+  font-weight: 400;
+  line-height: 1.3;
+  color: #7a4a2c;
+}
+
+.card__footer {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.8cqw;
+  width: 100%;
+  padding-bottom: clamp(1.25rem, 8cqw, 2rem);
+}
+
+.card__hashtag {
+  margin: 0;
+  font-family: var(--font-hindi);
+  font-size: 2.7cqw;
+  font-weight: 600;
+  letter-spacing: 0.02em;
+  color: #a9782c;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .envelope-intro {
+    transition-duration: 200ms;
+  }
+
+  .envelope-intro__hint {
+    animation: none;
+    opacity: 0.85;
+  }
+}

@@ -1,0 +1,9 @@
+@import url("https://fonts.googleapis.com/css2?family=Alex+Brush&family=Cinzel:wght@400;500;600;700&family=Cormorant+Garamond:ital,wght@0,400;0,500;0,600;0,700;1,400;1,500;1,600&family=Great+Vibes&family=Tiro+Devanagari+Hindi:ital@0;1&display=swap");
+@import "tailwindcss";
+
+@theme {
+  --font-serif: "Cormorant Garamond", Georgia, serif;
+  --font-script: "Alex Brush", "Great Vibes", cursive;
+  --font-caps: "Cinzel", Georgia, serif;
+  --font-hindi: "Tiro Devanagari Hindi", serif;
+}
